@@ -3,12 +3,18 @@ import datetime
 import re
 
 current_year = datetime.datetime.now().year
-copyright_string = "Copyright (c) YourCompany."
+copyright_string = "Copyright (c) YourCompany. "
 copyright_end = ""
 
 file_extensions = {
     ".py": "#",
 }
+
+excluded_dirs = set([
+    "node_modules",
+    "venv",
+    ".git"
+])
 
 def update_copyright(content, comment_prefix, comment_end):
     lines = content.splitlines()  
@@ -18,18 +24,21 @@ def update_copyright(content, comment_prefix, comment_end):
     for i in range(len(lines)):
         match = re.search(pattern, lines[i])
         if match:
-            lines[i] = re.sub(r"\d{4}.*" + re.escape(comment_end), str(current_year) + comment_end, lines[i])
+            lines[i] = re.sub(r"\d{4}"+copyright_end+"$" + re.escape(comment_end), str(current_year) + comment_end , lines[i])
             modified = True
             break 
 
     if not modified:
-        if lines:  
-            if not lines[0].strip():
-                lines.insert(0, f"{comment_prefix} {copyright_string} {current_year} {comment_end}")
+        if lines:
+            lineOffset = 0
+            if lines[0].startswith("#!"):   #don't break shebangs
+                lineOffset = 1
+            if not lines[lineOffset].strip():
+                lines.insert(lineOffset, f"{comment_prefix} {copyright_string}{current_year}{comment_end}")
             else:
-                lines.insert(0, f"{comment_prefix} {copyright_string} {current_year} {comment_end}\n")  
+                lines.insert(lineOffset, f"{comment_prefix} {copyright_string}{current_year}{comment_end}\n")
         else:
-            lines.append(f"{comment_prefix} {copyright_string} {current_year} {comment_end}\n") 
+            lines.append(f"{comment_prefix} {copyright_string}{current_year}{comment_end}\n")
 
     if lines:
         if not lines[0].endswith('\n'):  
@@ -43,6 +52,7 @@ def update_copyright(content, comment_prefix, comment_end):
     return result, modified
 
 for root, dirs, files in os.walk(os.path.dirname(__file__)):
+    dirs[:] = [d for d in dirs if d not in excluded_dirs]
     for file in files:
         for extension, comment_info in file_extensions.items():
             if file.endswith(extension):

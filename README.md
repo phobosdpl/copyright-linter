@@ -30,7 +30,7 @@ This Python script automates the process of updating or adding copyright notices
 ```
 file_extensions = {
     ".html": ("<!--", "-->")
-    ".css": "//",
+    ".css": ("/*", "*/"),
     ".ts": "//",
     ".yml": "#"
 }
